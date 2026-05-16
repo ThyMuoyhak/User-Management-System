@@ -6,8 +6,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 import models, schemas, crud
 from database import engine, SessionLocal
+import os
 
-# Create tables
+# Create tables (this will now create them in PostgreSQL)
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
@@ -15,7 +16,7 @@ app = FastAPI()
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with specific origins
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -36,7 +37,7 @@ def get_db():
 def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
-# Your existing API endpoints...
+# API endpoints
 @app.post("/users/", response_model=schemas.UserCreate)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     return crud.create_user(db, user)
@@ -64,3 +65,7 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     return {
         "message": "User deleted successfully"
     }
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}
